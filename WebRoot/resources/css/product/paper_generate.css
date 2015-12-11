@@ -1,0 +1,17 @@
+.navbar{margin-bottom:0px;}
+		
+#content {position: relative;	width: 100%; font-size:12px;}
+#content #left{width:195px;position: relative;background:#ffffff;;overflow: auto;}
+#content #right{position: absolute;left:230px;top:0px;}
+
+#basket{text-align:center;margin:5px 0px 0px;padding:5px 10px 15px 10px; background:whiteSmoke;border-top:1px solid #cccccc;}
+
+#content #left #switch{
+	background: #a7a7a7;width:3px;
+}
+
+.product-box{padding:0px 20px 20px 20px;}
+.product-label{line-height:45px;background:whiteSmoke;font-size:12px;padding:10px 20px 10px 20px;margin-right:10px;}
+.product-label:hover{background:#aaa;cursor:pointer;}
+
+iframe{border-width: 0px;height: 100%;width: 100%;}
