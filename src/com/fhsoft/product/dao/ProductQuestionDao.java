@@ -44,6 +44,11 @@ public class ProductQuestionDao extends BaseDao {
 		String sql = "delete from product_question where qst_id = ? and product_id = ?";
 		jdbcTemplate.update(sql, new Object[]{ qstId, productId });
 	}
+
+	public void addByProductAndQst(String productId, String qstId) {
+		String sql = "insert into product_question values (?,?)";
+		jdbcTemplate.update(sql, new Object[]{ productId, qstId });
+	}
 	
 	
 }

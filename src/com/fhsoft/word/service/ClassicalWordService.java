@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.fhsoft.base.bean.Page;
 import com.fhsoft.model.SubjectProperty;
+import com.fhsoft.model.Users;
 import com.fhsoft.model.Word;
 import com.fhsoft.word.dao.ClassicalWordDao;
 
@@ -49,7 +50,7 @@ public class ClassicalWordService {
 	 * @Date 2015-11-5 下午3:21:46
 	 */
 	public void addWord(Word word) {
-		wordDao.addWord(word);
+		wordDao.addWord(word,null);
 	}
 
 	/**
@@ -72,7 +73,7 @@ public class ClassicalWordService {
 		wordDao.delWord(word);
 	}
 
-	public String save(List<Word> list) {
+	public String save(List<Word> list, Users u) {
 		StringBuffer msg = new StringBuffer();
 		Map<String,Integer> map = new HashMap<String,Integer>();
 		boolean flag = false;
@@ -81,44 +82,44 @@ public class ClassicalWordService {
 			Word word = list.get(i);
 			
 			if(!wordTypeSet.contains(word.getType())) {
-				msg.append("第" + (i + 1) + "行字词类型错误，只能选择：字或词;\r\n");
+				msg.append("第" + (i + 2) + "行字词类型错误，只能选择：字或词;\r\n");
 			}
 			if(!wordPropertySet.contains(word.getProperty())) {
-				msg.append("第" + (i + 1) + "行字词词性填写错误，请使用下载模板填写;\r\n");
+				msg.append("第" + (i + 2) + "行字词词性填写错误，请使用下载模板填写;\r\n");
 			}
 			if(word.getName() == null || word.getName().trim().length() == 0) {
-				msg.append("第" + (i + 1) + "行字词必填;\r\n");
+				msg.append("第" + (i + 2) + "行字词必填;\r\n");
 			}
 			if(StringUtils.isBlank(word.getSoundmark())) {
-				msg.append("第" + (i + 1) + "行拼音必填;\r\n");
+				msg.append("第" + (i + 2) + "行拼音必填;\r\n");
 			}
 			if(word.getComponent() != null && word.getComponent().length() > 1) {
-				msg.append("第" + (i + 1) + "行偏旁部首，只能是一个中文字符;\r\n");
+				msg.append("第" + (i + 2) + "行偏旁部首，只能是一个中文字符;\r\n");
 			}
 			if(word.getName() != null && word.getName().length() > 100) {
-				msg.append("第" + (i + 1) + "行字词，最多只能输入100字符;\r\n");
+				msg.append("第" + (i + 2) + "行字词，最多只能输入100字符;\r\n");
 			}
 			if(word.getSoundmark() != null && word.getSoundmark().length() > 100) {
-				msg.append("第" + (i + 1) + "行拼音，最多只能输入100字符;\r\n");
+				msg.append("第" + (i + 2) + "行拼音，最多只能输入100字符;\r\n");
 			}
 			
 			if(wordDao.getWordIsSingle(word.getName(), word.getSoundmark(), word.getMeaning()) >0) {
-				msg.append("第" + (i + 1) + "行字词已存在;\r\n");
+				msg.append("第" + (i + 2) + "行字词已存在;\r\n");
 			} else {
 				key = word.getName() + "-" + word.getSoundmark() + "-" + word.getMeaning();
 				if(map.containsKey(key)) {
-					msg.append("第" + (i + 1) + "行与"+map.get(key)+"行重复;\r\n");
+					msg.append("第" + (i + 2) + "行与"+map.get(key)+"行重复;\r\n");
 				} else {
-					map.put(key, i + 1);
+					map.put(key, i + 2);
 					flag = true;
 				}
 			}
 			
 			if(StringUtils.isNotBlank(word.getBhs()) && !StringUtils.isNumeric(word.getBhs())) {
-				msg.append("第" + (i + 1) + "行笔画数只能是数字;\r\n");
+				msg.append("第" + (i + 2) + "行笔画数只能是数字;\r\n");
 			}
 			if(StringUtils.isNotBlank(word.getCbhs()) && !StringUtils.isNumeric(word.getCbhs())) {
-				msg.append("第" + (i + 1) + "行查笔画数只能是数字;\r\n");
+				msg.append("第" + (i + 2) + "行查笔画数只能是数字;\r\n");
 			}
 		}
 		if(msg.length() > 0) {
@@ -131,7 +132,7 @@ public class ClassicalWordService {
 			basicWord = wordDao.getWordByName(word.getName());
 			//不存在基础字词
 			if(basicWord == null) {
-				int id = wordDao.addWord(word);
+				int id = wordDao.addWord(word,u);
 				int aid = wordDao.addWordAdditional(word, id+"");
 				word.setId(aid + "");
 				wordDao.addExample(word);

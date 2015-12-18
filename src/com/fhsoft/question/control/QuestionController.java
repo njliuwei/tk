@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.alibaba.fastjson.JSON;
+import com.fhsoft.base.bean.JsonResult;
 import com.fhsoft.base.bean.Page;
 import com.fhsoft.base.bean.TreeNodeBean;
 import com.fhsoft.model.Question;
@@ -43,6 +46,10 @@ public class QuestionController {
 	 public String czyw(){
 		 return "question/czyw";
 	 }
+	 @RequestMapping("toZsdJctx")
+	 public String toZsdJctx(){
+		 return "question/setZsdJctx";
+	 }
 	 
 	 @RequestMapping("czywList")
 	 @ResponseBody
@@ -51,6 +58,7 @@ public class QuestionController {
 		int page=1;
 		String subject = request.getParameter("subject");
 		String code = request.getParameter("code");
+		String treetype = request.getParameter("treetype");
 		if(null!=request.getParameter("rows")){
 			pageRows=Integer.parseInt(request.getParameter("rows").toString());
 		}
@@ -59,7 +67,7 @@ public class QuestionController {
 		}
 		Page pageInfo = null;
 		try {
-			pageInfo = questionService.list(page,pageRows,subject,code,"zsd",question);
+			pageInfo = questionService.list(page,pageRows,subject,code,treetype,question);
 		} catch(Exception e) {
 			e.printStackTrace();
 			logger.error("得到试题信息出错", e);
@@ -212,5 +220,93 @@ public class QuestionController {
 		 }
 		 return nodes;
 	 }
+	 
+	 /**
+	  * @Description 保存试题解析标引信息
+	  * @param analysis
+	  * @return
+	  * @Date 2015-10-27 上午10:00:49
+	  */
+	 @RequestMapping("zsdJctxTree")
+	 @ResponseBody
+	 public Object zsdJctxTree(HttpServletRequest request, HttpServletResponse response){
+		 List<TreeNodeBean> tree = new ArrayList<TreeNodeBean>();
+		 String type = request.getParameter("type");
+		 String subject = request.getParameter("subject");
+		 try{
+			 tree = questionService.zsdJctxTree(type,subject);
+		 } catch(Exception e) {
+			 e.printStackTrace();
+		 }
+		 return tree;
+	 }
 
+	 @RequestMapping("zsdJctxList")
+	 @ResponseBody
+	 public Object zsdJctxList(HttpServletRequest request, HttpServletResponse response,Question question){
+		int pageRows=20;
+		int page=1;
+		String type = request.getParameter("type");
+		String code = request.getParameter("code");
+		if(null!=request.getParameter("rows")){
+			pageRows=Integer.parseInt(request.getParameter("rows").toString());
+		}
+		if(null!=request.getParameter("page")){
+			page=Integer.parseInt(request.getParameter("page").toString());
+		}
+		Page pageInfo = null;
+		try {
+			pageInfo = questionService.zsdJctxList(page,pageRows,type,code);
+		} catch(Exception e) {
+			e.printStackTrace();
+			logger.error("得到试题信息出错", e);
+		}
+		return pageInfo;
+	 }
+	 
+	 /**
+	  * @Description 保存试题解析标引信息
+	  * @param analysis
+	  * @return
+	  * @Date 2015-10-27 上午10:00:49
+	  */
+	 @RequestMapping("saveZsdJctx")
+	 @ResponseBody
+	 public Object saveZsdJctx(HttpServletRequest request, HttpServletResponse response){
+		 JsonResult result = new JsonResult();
+		 try{
+			String type = request.getParameter("type");
+			String code = request.getParameter("code");
+			String[] values = request.getParameter("values").split(",");
+			questionService.saveZsdJctx(type,code,values);
+			result.setSuccess(true);
+ 			result.setMsg("添加成功！");
+		 } catch(Exception e) {
+			 logger.error("知识点教材体系关系添加失败！", e);
+			result.setMsg("添加失败！");
+		 }
+		 return JSON.toJSONString(result);
+	 }
+	 
+	 /**
+	  * @Description 保存试题解析标引信息
+	  * @param analysis
+	  * @return
+	  * @Date 2015-10-27 上午10:00:49
+	  */
+	 @RequestMapping("delZsdJctx")
+	 @ResponseBody
+	 public Object delZsdJctx(HttpServletRequest request, HttpServletResponse response){
+		 JsonResult result = new JsonResult();
+		 try{
+			 String[] ids = request.getParameter("ids").split(",");
+			 questionService.delZsdJctx(ids);
+			 result.setSuccess(true);
+			 result.setMsg("添加成功！");
+		 } catch(Exception e) {
+			 logger.error("知识点教材体系关系添加失败！", e);
+			 result.setMsg("添加失败！");
+		 }
+		 return JSON.toJSONString(result);
+	 }
 }

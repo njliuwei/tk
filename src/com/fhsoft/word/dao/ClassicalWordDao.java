@@ -17,6 +17,7 @@ import org.springframework.stereotype.Repository;
 import com.fhsoft.base.bean.Page;
 import com.fhsoft.base.dao.BaseDao;
 import com.fhsoft.model.SubjectProperty;
+import com.fhsoft.model.Users;
 import com.fhsoft.model.Word;
 
 /**
@@ -59,10 +60,12 @@ public class ClassicalWordDao extends BaseDao {
 	 * 
 	 * @Description 
 	 * @param word
+	 * @param u 
 	 * @Date 2015-11-5 下午3:22:07
 	 */
-	public int addWord(final Word word) {
-		final String sql = "INSERT INTO classical_word(NAME,TYPE,COMPONENT,BUILDINGMETHOD,CBHS,BHS,CREATED,LASTMODIFIED)VALUES(?,?,?,?,?,?,(select CONVERT(varchar, getdate(), 120 ) ),(select CONVERT(varchar, getdate(), 120 ) ))";
+	public int addWord(final Word word, final Users u) {
+		final String sql = "INSERT INTO classical_word(NAME,TYPE,COMPONENT,BUILDINGMETHOD,CBHS,BHS,CREATED,LASTMODIFIED,CREATOR,CREATOR_ID," +
+				"LASTMODIFIER,LASTMODIFIER_ID)VALUES(?,?,?,?,?,?,(select CONVERT(varchar, getdate(), 120 ) ),(select CONVERT(varchar, getdate(), 120 ) ),?,?,?,?)";
 		KeyHolder keyHolder = new GeneratedKeyHolder();
 		jdbcTemplate.update(new PreparedStatementCreator() {
 			public PreparedStatement createPreparedStatement(Connection con)throws SQLException {
@@ -73,6 +76,10 @@ public class ClassicalWordDao extends BaseDao {
 				ps.setObject(4, word.getBuildingMethod());
 				ps.setObject(5, word.getCbhs());
 				ps.setObject(6, word.getBhs());
+				ps.setObject(7, u.getName());
+				ps.setObject(8, u.getId());
+				ps.setObject(9, u.getName());
+				ps.setObject(10, u.getId());
 				return ps;
 			}
 		}, keyHolder);
@@ -106,8 +113,10 @@ public class ClassicalWordDao extends BaseDao {
 	}
 
 	public void updateWord(Word word) {
-		String sql = "UPDATE classical_word SET TYPE=?,COMPONENT=?,BUILDINGMETHOD=?,CBHS=?, BHS=?,LASTMODIFIED=(select CONVERT(varchar, getdate(), 120 )) WHERE ID=?";
-		jdbcTemplate.update(sql,new Object[]{word.getType(),word.getComponent(),word.getBuildingMethod(),word.getCbhs(),word.getBhs(),word.getId()});
+		String sql = "UPDATE classical_word SET TYPE=?,COMPONENT=?,BUILDINGMETHOD=?,CBHS=?, BHS=?" +
+				",LASTMODIFIER_ID=?,LASTMODIFIER=?,LASTMODIFIED=(select CONVERT(varchar, getdate(), 120 )) WHERE ID=?";
+		jdbcTemplate.update(sql,new Object[]{word.getType(),word.getComponent(),word.getBuildingMethod(),word.getCbhs(),word.getBhs(),
+				word.getLastModifierId(),word.getLastModifier(),word.getId()});
 	}
 
 	/**

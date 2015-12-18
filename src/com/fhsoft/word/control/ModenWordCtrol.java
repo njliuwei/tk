@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import com.alibaba.fastjson.JSON;
 import com.fhsoft.base.bean.JsonResult;
 import com.fhsoft.base.bean.Page;
 import com.fhsoft.model.SubjectProperty;
+import com.fhsoft.model.Users;
 import com.fhsoft.model.Word;
 import com.fhsoft.util.ExcelContentParser;
 import com.fhsoft.word.service.ModenWordService;
@@ -78,10 +80,13 @@ public class ModenWordCtrol {
 	 
 	 @RequestMapping(value="updateWord")
 	 @ResponseBody
-	 public Object updateWord(HttpServletRequest request, HttpServletResponse response,Word word){
+	 public Object updateWord(HttpServletRequest request, HttpServletResponse response,HttpSession session,Word word){
 		JsonResult result = new JsonResult();
 		try {
-			wordService.updateWord(word);
+			Users u = (Users) session.getAttribute("user_info");
+			word.setLastModifierId(u.getId()+"");
+			word.setLastModifier(u.getName());
+			wordService.updateWord(word,u);
 			result.setSuccess(true);
 			result.setMsg("修改成功！");
 		} catch (Exception e) {
@@ -174,14 +179,15 @@ public class ModenWordCtrol {
 	 
 	 @RequestMapping("uploadWord")
 	 @ResponseBody
-	 public Object uploadWord(MultipartFile file,HttpServletRequest request, HttpServletResponse response){
+	 public Object uploadWord(MultipartFile file,HttpServletRequest request, HttpServletResponse response,HttpSession session){
 		JsonResult result = new JsonResult();
 		try {
+			Users u = (Users) session.getAttribute("user_info");
 			ExcelContentParser<Word> parser = new ExcelContentParser<Word>();
 			List<Word> list = new ArrayList<Word>();
 			String[] propertyNames = {"name","type","sxc","soundmark","component","cbhs","bhs","buildingMethod","property","explain"};
 			parser.parseExcel(list, Word.class, file.getInputStream(), propertyNames, file.getOriginalFilename(), 1);
-			String msg = wordService.save(list);
+			String msg = wordService.save(list,u);
 			if("success".equals(msg)) {
 				result.setSuccess(true);
 				result.setMsg("导入成功");

@@ -1,6 +1,5 @@
 package com.fhsoft.product.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -67,18 +66,15 @@ public class ProductService {
 	 * 
 	 */
 	public void add(Product product) {
-		List<Integer> qstIds = new ArrayList<Integer>();
 		//获得知识点IDs
 		String zsdIds = product.getZsd();
-		if(null != zsdIds && !"".equals(zsdIds)){
-			String[] ids = zsdIds.split(",");
-			for(String id : ids ){
-				//知识点下的题目
-				List<Integer> list = questionDao.getBySubjectAndZsd(String.valueOf(product.getSubject()), id);
-				qstIds.addAll(list);
-			}
-		}
+		//获得题型
+		String tx = product.getTx();
+		//获得难度
+		String nd = product.getNd();
 		
+		List<Integer> qstIds = questionDao.getBySubjectAndZsd(String.valueOf(product.getSubject()), zsdIds, tx, nd);
+	
 		product.setQstCount(qstIds.size());
 		//添加产品数据
 		int productId = productDao.add(product);
@@ -107,17 +103,15 @@ public class ProductService {
 		//先删除产品和试题的关联
 		productQuestionDao.deleteByProductId(product.getId());
 		
-		List<Integer> qstIds = new ArrayList<Integer>();
 		//获得知识点IDs
 		String zsdIds = product.getZsd();
-		if(null != zsdIds && !"".equals(zsdIds)){
-			String[] ids = zsdIds.split(",");
-			for(String id : ids ){
-				//知识点下的题目
-				List<Integer> list = questionDao.getBySubjectAndZsd(String.valueOf(product.getSubject()), id);
-				qstIds.addAll(list);
-			}
-		}
+		//获得题型
+		String tx = product.getTx();
+		//获得难度
+		String nd = product.getNd();
+				
+		List<Integer> qstIds = questionDao.getBySubjectAndZsd(String.valueOf(product.getSubject()), zsdIds, tx, nd);
+		
 		product.setQstCount(qstIds.size());
 		//更新产品
 		productDao.update(product);
@@ -199,12 +193,13 @@ public class ProductService {
 	 * @param id
 	 * @param subject
 	 * @param zsd
+	 * @param tx 
 	 * @return
 	 * @Date:2015年11月20日下午4:03:55
 	 * 
 	 */
-	public Page productZsdQuestion(int pageNo, int pageSize, String id, String subject, String zsd) {
-		Page page = questionDao.getByProductAndZsd(pageNo, pageSize, id, subject, zsd);
+	public Page productZsdQuestion(int pageNo, int pageSize, String id, String subject, String zsd, String tx) {
+		Page page = questionDao.getByProductAndZsd(pageNo, pageSize, id, subject, zsd, tx);
 		return page;
 	}
 
@@ -234,6 +229,20 @@ public class ProductService {
 		//修改产品的试题数
 		productDao.updateQstCount(productId);
 	}
+	
+	/**
+	 * @Description:
+	 * @param qstId
+	 * @param productId
+	 * @Date:2015年12月16日下午2:27:56
+	 * 
+	 */
+	public void addViewQst(String qstId, String productId) {
+		//删除试题
+		productQuestionDao.addByProductAndQst(productId,qstId);
+		//修改产品的试题数
+		productDao.updateQstCount(productId);
+	}
 
 	/**
 	 * @Description:产品名称是否存在
@@ -249,6 +258,24 @@ public class ProductService {
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * @Description:获得产品添加试题的列表
+	 * @param pageNo
+	 * @param pageSize
+	 * @param subject
+	 * @param productId
+	 * @param zsd
+	 * @param tx 
+	 * @param tx2 
+	 * @return
+	 * @Date:2015年12月16日上午11:39:34
+	 * 
+	 */
+	public Page getAddQstByPage(int pageNo, int pageSize, String subject, String productId,String productZsd, String zsd, String tx) {
+		Page page = questionDao.getProductAddQstByPage(pageNo, pageSize, subject, productId,productZsd, zsd, tx);
+		return page;
 	}
 
 }

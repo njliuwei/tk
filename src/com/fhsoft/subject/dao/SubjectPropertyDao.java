@@ -7,6 +7,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -132,17 +133,22 @@ public class SubjectPropertyDao extends BaseDao {
 	 * @return 
 	 * @Date 2015-11-9 下午3:06:40
 	 */
-	public List<SubjectProperty> getMenuTreeByName(String name) {
+	public List<SubjectProperty> getMenuTreeByName(String name,String subject) {
 		StringBuffer sql = new StringBuffer();
-		sql.append("WITH TMP (ID,NAME,PARENTID,SUBJECTID)AS(SELECT CHILD.ID,CHILD.NAME,");
+		Object[] values = {name};
+		sql.append("WITH TMP (ID,NAME,LEVEL,PARENTID,SUBJECTID)AS(SELECT CHILD.ID,CHILD.NAME,CHILD.LEVEL,");
 		sql.append("(SELECT TOP 1 ID FROM MENU WHERE NAME=(SELECT TOP 1 NAME FROM MENU WHERE ID=PARENT.PARENT_ID) AND TYPE='1'),PARENT.SUBJECT_ID ");
 		sql.append("FROM subject_property CHILD JOIN subject_property PARENT ON CHILD.parent_id=PARENT.ID ");
 		sql.append("WHERE CHILD.LEVEL='2' AND CHILD.NAME=? AND PARENT.NAME='题目' ");
 		sql.append("UNION ALL ");
-		sql.append("SELECT CHILD.ID,CHILD.NAME,CHILD.PARENT_ID,PARENT.SUBJECTID ");
+		sql.append("SELECT CHILD.ID,CHILD.NAME,CHILD.LEVEL,CHILD.PARENT_ID,PARENT.SUBJECTID ");
 		sql.append("FROM subject_property CHILD JOIN TMP PARENT ON CHILD.PARENT_iD=PARENT.ID) ");
-		sql.append("SELECT ID,NAME,PARENTID,SUBJECTID,(select count(1) from subject_property where parent_id=tmp.id)LEVEL FROM TMP ");
-		Object[] values = {name};
+		sql.append("SELECT ID,NAME,PARENTID,SUBJECTID,(select count(1) from subject_property where parent_id=tmp.id)isSystem,LEVEL FROM TMP WHERE 1=1 ");
+		if(StringUtils.isNotBlank(subject)) {
+			sql.append("AND SUBJECTID=? ");
+			values = new Object[]{name,subject};
+		}
+		sql.append("ORDER BY LEVEL");
 		List<SubjectProperty> list = jdbcTemplate.query(sql.toString(), new BeanPropertyRowMapper<SubjectProperty>(SubjectProperty.class),values);
 		return list;
 	}
@@ -155,14 +161,14 @@ public class SubjectPropertyDao extends BaseDao {
 	 */
 	public List<SubjectProperty> getMenuTreeForJcbb() {
 		StringBuffer sql = new StringBuffer();
-		sql.append("WITH TMP (ID,NAME,PARENTID,SUBJECTID,SUBJECTNAME)AS(SELECT CHILD.ID,cast((select name from menu where id=parent.parent_id) as varchar(200)),");
-		sql.append("(SELECT ID FROM MENU WHERE NAME='教材版本词库'),PARENT.SUBJECT_ID,cast((select name from menu where id=parent.parent_id) as varchar(2000)) ");
+		sql.append("WITH TMP (ID,NAME,LEVEL,PARENTID,SUBJECTID,SUBJECTNAME)AS(SELECT CHILD.ID,cast((select name from menu where id=parent.parent_id) as varchar(200)),");
+		sql.append("CHILD.LEVEL,(SELECT ID FROM MENU WHERE NAME='教材版本词库'),PARENT.SUBJECT_ID,cast((select name from menu where id=parent.parent_id) as varchar(2000)) ");
 		sql.append("FROM subject_property CHILD JOIN subject_property PARENT ON CHILD.parent_id=PARENT.ID WHERE ");
 		sql.append("CHILD.LEVEL='2' AND CHILD.NAME='教材体系' AND PARENT.NAME='题目' ");
 		sql.append("AND PARENT.SUBJECT_ID IN(SELECT ID FROM SUBJECT WHERE NAME LIKE '%语文%' OR NAME LIKE '%英语%') ");
-		sql.append("UNION ALL SELECT CHILD.ID,CHILD.NAME,CHILD.PARENT_ID,PARENT.SUBJECTID,CAST(PARENT.SUBJECTNAME+'_'+CHILD.NAME AS VARCHAR(2000)) ");
+		sql.append("UNION ALL SELECT CHILD.ID,CHILD.NAME,CHILD.LEVEL,CHILD.PARENT_ID,PARENT.SUBJECTID,CAST(PARENT.SUBJECTNAME+'_'+CHILD.NAME AS VARCHAR(2000)) ");
 		sql.append("FROM subject_property CHILD JOIN TMP PARENT ON CHILD.PARENT_iD=PARENT.ID) SELECT ID,NAME,PARENTID,SUBJECTID,(select ");
-		sql.append("count(1) from subject_property where parent_id=tmp.id)LEVEL,SUBJECTNAME FROM TMP ");
+		sql.append("count(1) from subject_property where parent_id=tmp.id)isSystem,SUBJECTNAME FROM TMP ORDER BY LEVEL");
 		List<SubjectProperty> list = jdbcTemplate.query(sql.toString(), new BeanPropertyRowMapper<SubjectProperty>(SubjectProperty.class));
 		return list;
 	}

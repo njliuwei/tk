@@ -49,7 +49,12 @@ public class PaperDao extends BaseDao {
 	 */
 	public void save(Paper paper) {
 		String sql = "insert into paper values (?,?,?,?,?,?,?,?,?,?,?,?)";
-		jdbcTemplate.update(sql, new Object[]{ paper.getName(), paper.getPaperContent(), paper.getProduct(), paper.getSubject(), paper.getExportPath1(), paper.getExportPath2(), paper.getCreated(), paper.getCreator(), paper.getCreatorId(), paper.getLastmodified(), paper.getLastmodifier(), paper.getLastmodifierId() });
+		jdbcTemplate.update(sql, new Object[]{ paper.getName(), paper.getPaperContent(), paper.getProduct(), paper.getSubject(), paper.getExportPath1(), paper.getExportPath2(), paper.getCreated(), paper.getCreatorId(), paper.getCreator(),  paper.getLastmodified(), paper.getLastmodifierId(), paper.getLastmodifier() });
+	}
+
+	public void update(Paper paper) {
+		String sql = "update paper set name = ?,paper_content = ?, lastmodified = ?, lastmodifier_id = ?, lastmodifier = ? where id = ?";
+		jdbcTemplate.update(sql, new Object[]{ paper.getName(), paper.getPaperContent(), paper.getLastmodified(), paper.getLastmodifierId(), paper.getLastmodifier(),paper.getId() });
 	}
 
 }

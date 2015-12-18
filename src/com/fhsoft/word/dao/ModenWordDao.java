@@ -16,6 +16,7 @@ import org.springframework.stereotype.Repository;
 import com.fhsoft.base.bean.Page;
 import com.fhsoft.base.dao.BaseDao;
 import com.fhsoft.model.SubjectProperty;
+import com.fhsoft.model.Users;
 import com.fhsoft.model.Word;
 
 /**
@@ -66,10 +67,12 @@ public class ModenWordDao extends BaseDao {
 	 * 
 	 * @Description 
 	 * @param word
+	 * @param u 
 	 * @Date 2015-11-5 下午3:22:07
 	 */
-	public int addWord(final Word word) {
-		final String sql = "INSERT INTO WORD(NAME,TYPE,SOUNDMARK,COMPONENT,BUILDINGMETHOD,CBHS,BHS,CREATED,LASTMODIFIED)VALUES(?,?,?,?,?,?,?,(select CONVERT(varchar, getdate(), 120 ) ),(select CONVERT(varchar, getdate(), 120 ) ))";
+	public int addWord(final Word word, final Users u) {
+		final String sql = "INSERT INTO WORD(NAME,TYPE,SOUNDMARK,COMPONENT,BUILDINGMETHOD,CBHS,BHS,CREATED,LASTMODIFIED,CREATOR,CREATOR_ID,LASTMODIFIER,LASTMODIFIER_ID)" +
+				"VALUES(?,?,?,?,?,?,?,(select CONVERT(varchar, getdate(), 120 ) ),(select CONVERT(varchar, getdate(), 120 ) ),?,?,?,?)";
 //		jdbcTemplate.update(sql, new Object[]{word.getName(),word.getType(),word.getSoundmark(),
 //				word.getComponent(),word.getBuildingMethod()});
 		KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -83,6 +86,10 @@ public class ModenWordDao extends BaseDao {
 				ps.setObject(5, word.getBuildingMethod());
 				ps.setObject(6, word.getCbhs());
 				ps.setObject(7, word.getBhs());
+				ps.setObject(8, u.getName());
+				ps.setObject(9, u.getId());
+				ps.setObject(10, u.getName());
+				ps.setObject(11, u.getId());
 				return ps;
 			}
 		}, keyHolder);
@@ -99,9 +106,11 @@ public class ModenWordDao extends BaseDao {
 		jdbcTemplate.update(sql, new Object[]{word.getProperty(),word.getExplain(),word.getSxc(),wid,wid});
 	}
 
-	public void updateWord(Word word) {
-		String sql = "UPDATE WORD SET TYPE=?,SOUNDMARK=?,COMPONENT=?,BUILDINGMETHOD=?,CBHS=?, BHS=?, LASTMODIFIED=(select CONVERT(varchar, getdate(), 120 )) WHERE ID=?";
-		jdbcTemplate.update(sql,new Object[]{word.getType(),word.getSoundmark(),word.getComponent(),word.getBuildingMethod(),word.getCbhs(),word.getBhs(),word.getId()});
+	public void updateWord(Word word, Users u) {
+		String sql = "UPDATE WORD SET TYPE=?,SOUNDMARK=?,COMPONENT=?,BUILDINGMETHOD=?,CBHS=?, BHS=?," +
+				"LASTMODIFIED=(select CONVERT(varchar, getdate(), 120 )),LASTMODIFIER_ID=?,LASTMODIFIER=? WHERE ID=?";
+		jdbcTemplate.update(sql,new Object[]{word.getType(),word.getSoundmark(),word.getComponent(),word.getBuildingMethod(),
+				word.getCbhs(),word.getBhs(),word.getLastModifierId(),word.getLastModifier(),word.getId()});
 	}
 
 	/**

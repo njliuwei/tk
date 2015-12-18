@@ -10,16 +10,15 @@ package com.fhsoft.model;
  */
 public class Menu {
 	
-	private int id;
+	private Integer id;
 	private String name;
-	private int parentId;
+	private Integer parentId;
 	private String url;
-	private int type;
-	
-	public int getId() {
+	private Integer type;
+	public Integer getId() {
 		return id;
 	}
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 	public String getName() {
@@ -28,10 +27,10 @@ public class Menu {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public int getParentId() {
+	public Integer getParentId() {
 		return parentId;
 	}
-	public void setParentId(int parentId) {
+	public void setParentId(Integer parentId) {
 		this.parentId = parentId;
 	}
 	public String getUrl() {
@@ -40,11 +39,13 @@ public class Menu {
 	public void setUrl(String url) {
 		this.url = url;
 	}
-	public int getType() {
+	public Integer getType() {
 		return type;
 	}
-	public void setType(int type) {
+	public void setType(Integer type) {
 		this.type = type;
 	}
+	
+	
 	
 }

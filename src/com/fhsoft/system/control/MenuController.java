@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fhsoft.base.bean.TreeNodeBean;
+import com.fhsoft.model.Users;
 import com.fhsoft.system.service.MenuService;
 
 /**
@@ -49,7 +50,8 @@ public class MenuController {
 		List<TreeNodeBean> beans = new ArrayList<TreeNodeBean>();
 		try {
 			int type = Integer.parseInt(request.getParameter("type"));
-			beans = menuService.getMenuTree(type);
+			Users user = (Users) session.getAttribute("user_info");
+			beans = menuService.getMenuTree(type,user);
 		} catch (Exception e) {
 			logger.error("获取系统菜单出错！", e);
 		}

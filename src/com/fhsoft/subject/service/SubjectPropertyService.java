@@ -93,7 +93,7 @@ public class SubjectPropertyService {
 	 */
 	public List<TreeNodeBean> getCopyToTree() {
 		List<TreeNodeBean> nodes = new ArrayList<TreeNodeBean>();
-		List<Menu> menus = menuDao.getMenusByType(3);
+		List<Menu> menus = menuDao.getMenusByType(3,null);
 		for(Menu menu : menus){
 			TreeNodeBean node = new TreeNodeBean();
 			node.setId(menu.getId());

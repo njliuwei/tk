@@ -55,12 +55,10 @@ public class ProductDao extends BaseDao {
                 ps.setString(7, "未发布");
                 ps.setInt(8, product.getQstCount());
                 ps.setString(9, product.getCreated());
-//                ps.setInt(10, product.getCreatorId());
-                ps.setInt(10, 0);
+                ps.setInt(10, product.getCreatorId());
                 ps.setString(11, product.getCreator());
                 ps.setString(12, product.getLastmodified());
-//                ps.setInt(13, product.getLastmodifierId());
-                ps.setInt(13, 0);
+                ps.setInt(13, product.getLastmodifierId());
                 ps.setString(14, product.getLastmodifier());
                 return ps;
 			}

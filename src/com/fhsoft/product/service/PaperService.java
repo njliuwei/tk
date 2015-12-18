@@ -185,4 +185,14 @@ public class PaperService {
 		return paperDao.getById(id);
 	}
 
+	/**
+	 * @Description:修改试卷
+	 * @param paper
+	 * @Date:2015年12月11日下午4:29:58
+	 * 
+	 */
+	public void update(Paper paper) {
+		paperDao.update(paper);
+	}
+
 }

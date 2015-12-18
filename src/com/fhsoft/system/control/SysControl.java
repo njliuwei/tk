@@ -8,14 +8,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -23,6 +26,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fhsoft.model.User;
+import com.fhsoft.model.Users;
+import com.fhsoft.system.service.SysService;
 
 /**
  * @ClassName:com.fhsoft.sys.control.LoginControl
@@ -35,6 +40,8 @@ import com.fhsoft.model.User;
 @Controller
 public class SysControl {
 	
+	@Autowired
+	protected SysService sysService;
 	protected Logger log = LoggerFactory.getLogger(getClass());
 	
 	/**
@@ -48,10 +55,30 @@ public class SysControl {
 	 * @Date:2015年4月7日下午2:30:01
 	 *
 	 */
-	@RequestMapping(value="login.do",method=RequestMethod.POST)
+	@RequestMapping(value="/login.do",method=RequestMethod.POST)
 	public ModelAndView login(HttpServletRequest request,
 			HttpServletResponse response,RedirectAttributes attr,HttpSession session) throws Exception {
 		//TODO 用户校验
+		String name=request.getParameter("name");
+		String password=request.getParameter("password");
+		Users u = sysService.login(name, password);
+		if(u == null){
+			attr.addFlashAttribute("error", "用户不存在，请重新输入！");
+			return new ModelAndView("redirect:relogin.do");
+		}else{
+			if(password.trim().equals(u.getPassword().trim())){
+				//根据userId查询出用户拥有的角色ID集合
+				//List<Integer> roleIds = userService.getRoleIds(user.getId());
+				//根据userId查询出用户拥有的菜单ID集合
+				//List<Integer> menuIds = userService.getMenuIds(user.getId());
+				session.setAttribute("menuIds", "");
+				session.setAttribute("roleIds", "");
+				session.setAttribute("user_info", u);
+			}else{
+				attr.addFlashAttribute("error", "用户名或密码不正确！");
+				return new ModelAndView("redirect:relogin.do");
+			}
+		}
 		return new ModelAndView("redirect:index.do");
 	}
 	

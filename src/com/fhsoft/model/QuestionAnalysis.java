@@ -15,6 +15,8 @@ public class QuestionAnalysis {
 	
 	private String nr;
 	
+	private String xmlnr;
+	
 	private String lx;
 	
 	private String fa;
@@ -53,6 +55,14 @@ public class QuestionAnalysis {
 
 	public void setNr(String nr) {
 		this.nr = nr;
+	}
+
+	public String getXmlnr() {
+		return xmlnr;
+	}
+
+	public void setXmlnr(String xmlnr) {
+		this.xmlnr = xmlnr;
 	}
 
 	public String getLx() {

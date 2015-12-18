@@ -31,6 +31,8 @@ public class QuestionService {
 	@Autowired
 	private SubjectPropertyDao spDao;
 	
+	@Autowired
+	private SubjectPropertyDao subjectPropertyDao;
 	/**
 	 * 
 	 * @Description 
@@ -47,7 +49,7 @@ public class QuestionService {
 	 * @param pageNo
 	 * @param pageSize
 	 * @param subject 学科ID
-	 * @param code 知识点ID
+	 * @param code 知识点/教材体系ID
 	 * @param col 做为查询菜单的列
 	 * @param question
 	 * @return
@@ -210,5 +212,56 @@ public class QuestionService {
 	 */
 	public List<SubjectProperty> getOptions(String type, String subject) {
 		return questionDao.getOptions(type,subject);
+	}
+
+	public List<TreeNodeBean> zsdJctxTree(String type, String subject) {
+		List<TreeNodeBean> nodes = new ArrayList<TreeNodeBean>();
+		String name = "知识点";
+		if("jctx".equals(type)) {
+			name = "教材体系";
+		}
+		List<SubjectProperty> props = subjectPropertyDao.getMenuTreeByName(name,subject);
+		for(SubjectProperty prop : props){
+			TreeNodeBean node = new TreeNodeBean();
+			node.setId(prop.getId());
+			node.setText(prop.getName());
+			node.setPid(prop.getParentId());
+			node.setAttributes(new TreeNodeAttribute("zsd",prop.getSubjectId()+""));
+			if(prop.getIsSystem() == 0){
+				node.setState("open");
+			}
+			nodes.add(node);
+		}
+		return nodes;
+	}
+
+	/**
+	 * 
+	 * @Description 得到知识点/教材体系对应的教材体系/知识点
+	 * @param page
+	 * @param pageRows
+	 * @param type zsd/jctx
+	 * @param code zsd/jsct id
+	 * @return
+	 * @Date 2015-12-17 上午10:17:50
+	 */
+	public Page zsdJctxList(int page, int pageRows, String type, String code) {
+		return questionDao.zsdJctxList(page,pageRows,type,code);
+	}
+
+	/**
+	 * 
+	 * @Description 添加知识点、教材体系关系 
+	 * @param type 知识点/教材体系
+	 * @param code ID
+	 * @param values IDS
+	 * @Date 2015-12-17 上午11:23:08
+	 */
+	public void saveZsdJctx(String type, String code, String[] values) {
+		questionDao.saveZsdJctx(type,code,values);
+	}
+
+	public void delZsdJctx(String[] ids) {
+		questionDao.delZsdJctx(ids);
 	}
 }

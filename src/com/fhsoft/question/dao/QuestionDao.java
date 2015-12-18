@@ -1,6 +1,7 @@
 package com.fhsoft.question.dao;
 
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import com.fhsoft.model.QstModel;
 import com.fhsoft.model.Question;
 import com.fhsoft.model.QuestionAnalysis;
 import com.fhsoft.model.SubjectProperty;
+import com.fhsoft.model.ZsdJctxRelations;
 
 @Repository
 public class QuestionDao extends BaseDao {
@@ -45,7 +47,7 @@ public class QuestionDao extends BaseDao {
 		StringBuffer sql = new StringBuffer();
 		List<String> params = new ArrayList<String>();
 		params.addAll(values);
-		sql.append("SELECT iid id,xk,t,zsd,");
+		sql.append("SELECT iid id,xk,t,zsd,da,xmlda,xmltm,");
 		sql.append("isnull((select stuff((select ','+name from subject_property where cast(id as varchar) in (select col from dbo.f_splitSTR(zsd,',')) for xml path('')),1,1,'')),zsd) zsdmc,");
 		sql.append("isnull((select stuff((select ','+name from subject_property where cast(id as varchar) in (select col from dbo.f_splitSTR(jctx,',')) for xml path('')),1,1,'')),jctx) jctx,");
 		sql.append("isnull((select stuff((select ','+name from subject_property where cast(id as varchar) in (select col from dbo.f_splitSTR(tx,',')) for xml path('')),1,1,'')),tx) tx,");
@@ -64,7 +66,7 @@ public class QuestionDao extends BaseDao {
 		sql.append("isnull((select stuff((select ','+name from subject_property where cast(id as varchar) in (select col from dbo.f_splitSTR(property10,',')) for xml path('')),1,1,'')),property10)property10 ");
 		sql.append("FROM ").append(subjectMap.get(subject)).append(" ");
 		sql.append(" WHERE 1=1 ");
-		sql.append("AND EXISTS (select 1 from (select col from dbo.f_splitSTR(").append(col);
+		sql.append("AND (EXISTS (select 1 from (select col from dbo.f_splitSTR(").append(col);
 //		sql.append("zsd,','))a join (select code from knowledge where code_all like ");
 //		sql.append("(select code_all from knowledge where code=?) + '%' )b on a.col=b.code )");
 		sql.append(",','))a  where a.col in (");
@@ -72,6 +74,17 @@ public class QuestionDao extends BaseDao {
 			sql.append("?,");
 		}
 		sql.append("?)) ");
+		if("jctx".equals(col)) {
+			params.addAll(values);
+			sql.append(" OR EXISTS(SELECT 1 FROM ZSDJCTX WHERE JCTXID IN( ");
+			for(int i = 0; i < values.size() - 1; i++) {
+				sql.append("?,");
+			}
+			sql.append("?) ");
+			sql.append("AND ZSDID IN(SELECT COL FROM DBO.F_SPLITSTR(ZSD,','))) ");
+		}
+		sql.append(")");
+		
 		if(StringUtils.isNotBlank(question.getTx())) {
 			sql.append("AND TX=? ");
 			params.add(question.getTx());
@@ -82,12 +95,22 @@ public class QuestionDao extends BaseDao {
 		}
 		StringBuffer countSql = new StringBuffer();
 		countSql.append("SELECT COUNT(1) FROM ").append(subjectMap.get(subject)).append(" ");
-		countSql.append(" WHERE EXISTS (select 1 from (select col from dbo.f_splitSTR(").append(col);
+		countSql.append(" WHERE (EXISTS (select 1 from (select col from dbo.f_splitSTR(").append(col);
 		countSql.append(",','))a  where a.col in (");
 		for(int i = 0; i < values.size() - 1; i++) {
 			countSql.append("?,");
 		}
 		countSql.append("?))");
+		if("jctx".equals(col)) {
+			countSql.append(" OR EXISTS(SELECT 1 FROM ZSDJCTX WHERE JCTXID IN( ");
+			for(int i = 0; i < values.size() - 1; i++) {
+				countSql.append("?,");
+			}
+			countSql.append("?) ");
+			countSql.append("AND ZSDID IN(SELECT COL FROM DBO.F_SPLITSTR(ZSD,','))) ");
+		}
+		countSql.append(")");
+		
 		if(StringUtils.isNotBlank(question.getTx())) {
 			countSql.append("AND TX=? ");
 		}
@@ -154,7 +177,7 @@ public class QuestionDao extends BaseDao {
 	public List<QuestionAnalysis> getQuestionAnalysesInfo(String id,
 			String subject) {
 		StringBuffer sql = new StringBuffer();
-		sql.append("SELECT ID,ST_ID,NR,LX,FA,property1,property2,property3,property4,property5 ");
+		sql.append("SELECT ID,ST_ID,NR,XMLNR,LX,FA,property1,property2,property3,property4,property5 ");
 		sql.append("FROM ").append(subjectMap.get(subject)).append("STJX WHERE ST_ID=? ");
 		Object[] values = {id};
 		return this.getList(sql.toString(), QuestionAnalysis.class, values);
@@ -193,6 +216,30 @@ public class QuestionDao extends BaseDao {
 		if(StringUtils.isNotBlank(question.getZsdmc())) {
 			sql.append("ZSDMC=?,");
 			params.add(question.getZsdmc());
+		}
+		if(StringUtils.isNotBlank(question.getZcids())) {
+			sql.append("ZCIDS=?,");
+			params.add(question.getZcids());
+		}
+		if(StringUtils.isNotBlank(question.getDqs())) {
+			sql.append("DQS=?,");
+			params.add(question.getDqs());
+		}
+		if(StringUtils.isNotBlank(question.getSjs())) {
+			sql.append("SJS=?,");
+			params.add(question.getSjs());
+		}
+		if(StringUtils.isNotBlank(question.getTjxxs())) {
+			sql.append("TJXXS=?,");
+			params.add(question.getTjxxs());
+		}
+		if(StringUtils.isNotBlank(question.getSycs())) {
+			sql.append("SYCS=?,");
+			params.add(question.getSycs());
+		}
+		if(StringUtils.isNotBlank(question.getNds())) {
+			sql.append("NDS=?,");
+			params.add(question.getNds());
 		}
 		if(StringUtils.isNotBlank(question.getLy())) {
 			sql.append("LY=?,");
@@ -337,13 +384,28 @@ public class QuestionDao extends BaseDao {
 	 * @Description:根据学科和知识点获得题目列表
 	 * @param subject
 	 * @param zsd
+	 * @param nd 
+	 * @param tx 
 	 * @return
 	 * @Date:2015年11月12日上午10:37:22
 	 * 
 	 */
-	public List<Integer> getBySubjectAndZsd(String subject, String zsd) {
-		String sql = "select iid from " + subjectMap.get(subject) + " where exists (select col from dbo.f_splitSTR(zsd,',') where col = ?) ";
-		return jdbcTemplate.queryForList(sql, new Object[]{ zsd }, Integer.class);
+	public List<Integer> getBySubjectAndZsd(String subject, String zsd, String tx, String nd) {
+		StringBuffer sql = new StringBuffer();
+		sql.append("select iid from ");
+		sql.append(subjectMap.get(subject));
+		sql.append(" a where exists (select b.col from dbo.f_splitSTR(?,',') b where exists(select col from dbo.f_splitSTR(a.zsd,',') where col = b.col)) ");
+		if(null != tx && !"".equals(tx)){
+			sql.append(" and exists (select col from dbo.f_splitSTR('");
+			sql.append(tx);
+			sql.append("',',') where col = a.tx) ");
+		}
+		if(null != nd && !"".equals(nd)){
+			sql.append(" and exists (select col from dbo.f_splitSTR('");
+			sql.append(nd);
+			sql.append("',',') where col = a.nd) ");
+		}
+		return jdbcTemplate.queryForList(sql.toString(), new Object[]{ zsd }, Integer.class);
 	}
 
 	/**
@@ -365,19 +427,27 @@ public class QuestionDao extends BaseDao {
 	 * @param productId
 	 * @param subject
 	 * @param zsd
+	 * @param tx 
 	 * @return
 	 * @Date:2015年11月20日下午3:36:05
 	 *
 	 */
-	public Page getByProductAndZsd(int pageNo, int pageSize, String productId, String subject, String zsd) {
-		Page page = new Page();
+	public Page getByProductAndZsd(int pageNo, int pageSize, String productId, String subject, String zsd, String tx) {
+		StringBuffer sql = new StringBuffer();
+		sql.append("select a.iid id, a.* from ");
+		sql.append(subjectMap.get(subject));
+		sql.append(" a right join product_question b on a.iid = b.qst_id where b.product_id = ? ");
 		if(null != zsd && !"".equals(zsd)){
-			String sql = "select a.iid id, a.* from " +  subjectMap.get(subject) + " a right join product_question b on a.iid = b.qst_id where b.product_id = ? and exists (select col from dbo.f_splitSTR(a.zsd,',') where col = ?)";
-			page = super.pageQuery1(pageNo, pageSize, sql, Question.class, productId, zsd);
-		}else{
-			String sql = "select a.iid id, a.* from " +  subjectMap.get(subject) + " a right join product_question b on a.iid = b.qst_id where b.product_id = ? ";
-			page = super.pageQuery1(pageNo, pageSize, sql, Question.class, productId);
+			sql.append(" and exists (select col from dbo.f_splitSTR(a.zsd,',') where col = '");
+			sql.append(zsd);
+			sql.append("')");
 		}
+		if(null != tx && !"全部".equals(tx)){
+			sql.append(" and a.tx = '");
+			sql.append(tx);
+			sql.append("'");
+		}
+		Page page = super.pageQuery1(pageNo, pageSize, sql.toString(), Question.class, productId);
 		return page;
 	}
 	
@@ -409,6 +479,45 @@ public class QuestionDao extends BaseDao {
 		String sql = "select a.iid id, a.* from " +  subjectMap.get(subject) + " a   where exists (select col from dbo.f_splitSTR(?,',') where col = a.iid)";
 		List<Question> list = jdbcTemplate.query(sql, new Object[]{ qstIds }, new BeanPropertyRowMapper<Question>(Question.class));
 		return list;
+	}
+	
+
+	/**
+	 * @Description:获得产品添加试题的列表
+	 * @param pageNo
+	 * @param pageSize
+	 * @param subject
+	 * @param productId
+	 * @param zsd
+	 * @param tx 
+	 * @param tx2 
+	 * @return
+	 * @Date:2015年12月16日上午11:41:00
+	 * 
+	 */
+	public Page getProductAddQstByPage(int pageNo, int pageSize, String subject, String productId, String productZsd, String zsd, String tx) {
+		StringBuffer sql = new StringBuffer();
+		sql.append("select a.iid id, a.* from ");
+		sql.append(subjectMap.get(subject));
+		sql.append(" a where not exists (select qst_id from product_question where qst_id = a.iid and product_id = ?) ");
+		sql.append(" and exists (select a.col from (select col from dbo.f_splitSTR(a.zsd,',')) a, ");
+		sql.append(" (select col from dbo.f_splitSTR('");
+		sql.append(productZsd);
+		sql.append("',',')) b");
+		sql.append(" where a.col = b.col ");
+		if(null != zsd && !"".equals(zsd)){
+			sql.append("and a.col = '");
+			sql.append(zsd);
+			sql.append("'");
+		}
+		sql.append(")");
+		if(null != tx && !"全部".equals(tx)){
+			sql.append(" and a.tx = '");
+			sql.append(tx);
+			sql.append("'");
+		}
+		Page page = super.pageQuery1(pageNo, pageSize, sql.toString(), Question.class, productId);
+		return page;
 	}
 	
 	/**
@@ -459,9 +568,90 @@ public class QuestionDao extends BaseDao {
 		sql.append("SELECT b.name,b.id col ");
 		sql.append("FROM subject_property a join subject_property b on a.id=b.parent_id ");
 		sql.append("WHERE a.PARENT_ID=(SELECT ID FROM subject_property WHERE SUBJECT_ID=? AND NAME='题目') ");
-		sql.append("and a.status='启用' AND A.COL=?　order by b.sort  ");
+		sql.append("and a.status='启用' AND A.COL=? order by b.sort  ");
 		Object[] values = {subject,type};
 		return this.getList(sql.toString(), SubjectProperty.class, values);
+	}
+
+	/**
+	 * 
+	 * @Description 得到知识点/教材体系对应的教材体系/知识点
+	 * @param page
+	 * @param pageRows
+	 * @param type zsd/jctx
+	 * @param code zsd/jsct id
+	 * @return
+	 * @Date 2015-12-17 上午10:17:50
+	 */
+	public Page zsdJctxList(int page, int pageRows, String type, String code) {
+		List<String> params = new ArrayList<String>();
+		StringBuffer sql = new StringBuffer();
+		StringBuffer withSql = new StringBuffer();
+		withSql.append("WITH TMP(ID,PARENT_ID,PATH)AS(SELECT ID,PARENT_ID,CAST(NAME AS VARCHAR(MAX))");
+		withSql.append("FROM SUBJECT_PROPERTY WHERE LEVEL = 2 UNION ALL ");
+		withSql.append("SELECT CHILD.ID,CHILD.PARENT_ID,CAST((PARENT.PATH+'-'+CHILD.NAME) AS VARCHAR(MAX)) FROM ");
+		withSql.append("TMP PARENT,SUBJECT_PROPERTY CHILD WHERE PARENT.ID=CHILD.PARENT_ID)");
+		sql.append("SELECT ZJ.ID,ZSD.PATH ZSDNAME,ZSDID,JCTX.PATH JCTXNAME,JCTXID ");
+		sql.append("FROM ZSDJCTX ZJ JOIN TMP ZSD ON ZJ.ZSDID=ZSD.ID ");
+		sql.append("JOIN TMP JCTX ON ZJ.JCTXID=JCTX.ID WHERE 1=1 ");
+		if(StringUtils.isNotBlank(code)) {
+			params.add(code);
+			if("jctx".equals(type)) {
+				sql.append("AND JCTXID=? ");
+			} else {
+				sql.append("AND ZSDID=? ");
+			}
+		} else {
+			sql.append("AND 1=2 ");
+		}
+		return pageQueryContainsWithSql(page, pageRows,0, withSql.toString(),sql.toString(),withSql.toString()+sql.replace(sql.lastIndexOf(")")+1, sql.lastIndexOf("FROM"), "select count(1) ").toString(),ZsdJctxRelations.class,params.toArray());
+	}
+
+	/**
+	 * 
+	 * @Description 添加知识点、教材体系关系 
+	 * @param type 知识点/教材体系
+	 * @param code ID
+	 * @param values IDS
+	 * @Date 2015-12-17 上午11:23:08
+	 */
+	public void saveZsdJctx(String type, String code, String[] values) {
+		String sql = "IF NOT EXISTS(SELECT 1 FROM ZSDJCTX WHERE ZSDID=? AND JCTXID=?)INSERT INTO ZSDJCTX(ZSDID,JCTXID)VALUES(?,?)";
+		List<Object[]> args = new ArrayList<Object[]>();
+		List<String> info = new ArrayList<String>();
+		int[] types = new int[4];
+		for(int i = 0; i < types.length; i++) {
+			types[i] = Types.VARCHAR;
+		}
+		for(String id : values) {
+			info.clear();
+			if("zsd".equals(type)) {
+				info.add(code);
+				info.add(id);
+				info.add(code);
+				info.add(id);
+			} else {
+				info.add(id);
+				info.add(code);
+				info.add(id);
+				info.add(code);
+			}
+			args.add(info.toArray());
+		}
+		jdbcTemplate.batchUpdate(sql, args, types);
+	}
+
+	public void delZsdJctx(String[] ids) {
+		StringBuffer sql = new StringBuffer();
+		List<String> params = new ArrayList<String>();
+		sql.append("DELETE ZSDJCTX WHERE ID IN(");
+		for(String id : ids) {
+			sql.append("?,");
+			params.add(id);
+		}
+		sql.delete(sql.length() - 1, sql.length());
+		sql.append(")");
+		this.jdbcTemplate.update(sql.toString(), params.toArray());
 	}
 
 

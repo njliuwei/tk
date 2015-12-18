@@ -12,11 +12,19 @@ public class Question {
 	
 	private String t;
 	
+	private String xmlTm;
+	
+	private String da;
+	
+	private String xmlDa;
+	
 	private String wl;
 	
 	private String lx;
 	
 	private String zc;
+	
+	private String zcids;
 	
 	private String xk;
 	
@@ -37,6 +45,18 @@ public class Question {
 	private String memo;
 	
 	private String ly;
+	
+	private String nds;
+	
+	private String zts;
+	
+	private String dqs;
+	
+	private String sjs;
+	
+	private String tjxxs;
+	
+	private String sycs;
 	
 	private String property1;
 	
@@ -83,6 +103,30 @@ public class Question {
 		this.t = t;
 	}
 
+	public String getXmlTm() {
+		return xmlTm;
+	}
+
+	public void setXmlTm(String xmlTm) {
+		this.xmlTm = xmlTm;
+	}
+
+	public String getDa() {
+		return da;
+	}
+
+	public void setDa(String da) {
+		this.da = da;
+	}
+
+	public String getXmlDa() {
+		return xmlDa;
+	}
+
+	public void setXmlDa(String xmlDa) {
+		this.xmlDa = xmlDa;
+	}
+
 	public String getWl() {
 		return wl;
 	}
@@ -105,6 +149,14 @@ public class Question {
 
 	public void setZc(String zc) {
 		this.zc = zc;
+	}
+
+	public String getZcids() {
+		return zcids;
+	}
+
+	public void setZcids(String zcids) {
+		this.zcids = zcids;
 	}
 
 	public String getXk() {
@@ -185,6 +237,54 @@ public class Question {
 
 	public void setLy(String ly) {
 		this.ly = ly;
+	}
+
+	public String getNds() {
+		return nds;
+	}
+
+	public void setNds(String nds) {
+		this.nds = nds;
+	}
+
+	public String getZts() {
+		return zts;
+	}
+
+	public void setZts(String zts) {
+		this.zts = zts;
+	}
+
+	public String getDqs() {
+		return dqs;
+	}
+
+	public void setDqs(String dqs) {
+		this.dqs = dqs;
+	}
+
+	public String getSjs() {
+		return sjs;
+	}
+
+	public void setSjs(String sjs) {
+		this.sjs = sjs;
+	}
+
+	public String getTjxxs() {
+		return tjxxs;
+	}
+
+	public void setTjxxs(String tjxxs) {
+		this.tjxxs = tjxxs;
+	}
+
+	public String getSycs() {
+		return sycs;
+	}
+
+	public void setSycs(String sycs) {
+		this.sycs = sycs;
 	}
 
 	public String getProperty1() {

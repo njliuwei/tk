@@ -24,10 +24,12 @@ import com.fhsoft.model.Authorize;
 import com.fhsoft.model.PaperModel;
 import com.fhsoft.model.Product;
 import com.fhsoft.model.SubjectProperty;
+import com.fhsoft.model.Users;
 import com.fhsoft.product.service.PaperService;
 import com.fhsoft.product.service.ProductService;
 import com.fhsoft.subject.service.SubjectPropertyValueService;
 import com.fhsoft.util.DownloadUtil;
+import com.fhsoft.util.ModelPropertySetUtil;
 
 
 /**
@@ -65,7 +67,11 @@ public class ProductController {
 			HttpServletResponse response,HttpSession session) throws Exception {
 		Map<String,Object> map = new HashMap<String, Object>();
 		String subject = request.getParameter("subject");
+		List<SubjectProperty> txs = subjectPropertyValueService.getChildBySubjectCol(subject, "tx");
+		List<SubjectProperty> nds = subjectPropertyValueService.getChildBySubjectCol(subject, "nd");
 		map.put("subject", subject);
+		map.put("txs", txs);
+		map.put("nds", nds);
 		return new ModelAndView("product/product",map);
 	}
 	
@@ -113,6 +119,8 @@ public class ProductController {
 			HttpServletResponse response,HttpSession session,Product product) throws Exception {
 		JsonResult result = new JsonResult();
 		try {
+			Users user = (Users) session.getAttribute("user_info");
+			ModelPropertySetUtil.addInfo(product, user);
 			productService.add(product);
 			result.setSuccess(true);
 			result.setMsg("添加成功！");
@@ -188,6 +196,8 @@ public class ProductController {
 			HttpServletResponse response,HttpSession session,Product product) throws Exception {
 		JsonResult result = new JsonResult();
 		try {
+			Users user = (Users) session.getAttribute("user_info");
+			ModelPropertySetUtil.updateInfo(product, user);
 			productService.update(product);
 			result.setSuccess(true);
 			result.setMsg("修改成功！");
@@ -214,9 +224,94 @@ public class ProductController {
 		Map<String,Object> map = new HashMap<String, Object>();
 		String productId = request.getParameter("productId");
 		String subject = request.getParameter("subject");
+		List<SubjectProperty> txs = subjectPropertyValueService.getChildBySubjectCol(subject, "tx");
 		map.put("productId", productId);
 		map.put("subject", subject);
+		map.put("txs", txs);
 		return new ModelAndView("product/product_view",map);
+	}
+	
+	/**
+	 * @Description:进入产品的添加试题页面
+	 * @param request
+	 * @param response
+	 * @param session
+	 * @return
+	 * @throws Exception
+	 * @Date:2015年12月16日上午11:35:56
+	 *
+	 */
+	@RequestMapping("productViewQstAddPage")
+	public ModelAndView productViewQstAddPage(HttpServletRequest request,
+			HttpServletResponse response,HttpSession session) throws Exception {
+		Map<String,Object> map = new HashMap<String, Object>();
+		String productId = request.getParameter("productId");
+		String subject = request.getParameter("subject");
+		String zsd = request.getParameter("zsd");
+		List<SubjectProperty> txs = subjectPropertyValueService.getChildBySubjectCol(subject, "tx");
+		map.put("productId", productId);
+		map.put("subject", subject);
+		map.put("zsd", zsd);
+		map.put("txs", txs);
+		return new ModelAndView("product/product_question_add",map);
+	}
+	
+	/**
+	 * @Description:产品添加试题的列表
+	 * @param request
+	 * @param response
+	 * @param session
+	 * @return
+	 * @throws Exception
+	 * @Date:2015年12月16日下午2:22:58
+	 *
+	 */
+	@RequestMapping("productZsdQuestionAddList")
+	@ResponseBody
+	public Object productZsdQuestionAddList(HttpServletRequest request,
+			HttpServletResponse response,HttpSession session) throws Exception {
+		Page page = null;
+		try {
+			int pageNo = Integer.valueOf(request.getParameter("page"));
+			int pageSize = Integer.valueOf(request.getParameter("rows"));
+			String productId = request.getParameter("productId");
+			String subject = request.getParameter("subject");
+			String zsd = request.getParameter("zsd");
+			String tx = request.getParameter("tx");
+			String productZsd = productService.getById(Integer.parseInt(productId)).getZsd();
+			page = productService.getAddQstByPage(pageNo, pageSize, subject, productId,productZsd, zsd, tx);
+		} catch (Exception e) {
+			logger.error("获取产品添加试题列表出错！",e);
+		}
+		return page;
+	}
+	
+	/**
+	 * @Description:产品浏览中添加试题
+	 * @param request
+	 * @param response
+	 * @param session
+	 * @return
+	 * @throws Exception
+	 * @Date:2015年12月16日下午2:25:54
+	 *
+	 */
+	@RequestMapping("productViewQstAdd")
+	@ResponseBody
+	public Object productViewQstAdd(HttpServletRequest request,
+			HttpServletResponse response,HttpSession session) throws Exception {
+		JsonResult result = new JsonResult();
+		try {
+			String qstId = request.getParameter("qstId");
+			String productId = request.getParameter("productId");
+			productService.addViewQst(qstId,productId);
+			result.setSuccess(true);
+			result.setMsg("添加成功！");
+		} catch (Exception e) {
+			result.setMsg("添加失败！");
+			logger.error("产品浏览试题添加失败！", e);
+		}
+		return JSON.toJSONString(result);
 	}
 	
 	/**
@@ -323,10 +418,12 @@ public class ProductController {
 		Map<String,Object> map = new HashMap<String, Object>();
 		String productId = request.getParameter("productId");
 		String subject = request.getParameter("subject");
+		List<SubjectProperty> txs = subjectPropertyValueService.getChildBySubjectCol(subject, "tx");
 		map.put("productId", productId);
 		map.put("subject", subject);
 		map.put("zsdTreeUrl", "getProductZsdTree?productId=" + productId);
 		map.put("qstUrl", "productZsdQuestionList?productId="+productId+"&subject="+subject);
+		map.put("txs", txs);
 		return new ModelAndView("product/paper_generate_zsd",map);
 	}
 	
@@ -375,7 +472,8 @@ public class ProductController {
 			String productId = request.getParameter("productId");
 			String subject = request.getParameter("subject");
 			String zsd = request.getParameter("zsd");
-			page = productService.productZsdQuestion(pageNo,pageSize,productId,subject,zsd);
+			String tx = request.getParameter("tx");
+			page = productService.productZsdQuestion(pageNo,pageSize,productId,subject,zsd,tx);
 		} catch (Exception e) {
 			logger.error("获取产品组卷的试题列表出错！",e);
 		}

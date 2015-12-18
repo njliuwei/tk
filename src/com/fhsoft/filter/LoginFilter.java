@@ -23,38 +23,29 @@ public class LoginFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
-		HttpServletRequest servletRequest = (HttpServletRequest) request;
-		HttpServletResponse servletResponse = (HttpServletResponse) response;
-		HttpSession session = servletRequest.getSession();
-		// 获得用户请求的URI
-		String path = servletRequest.getRequestURI();
-		// System.out.println(path);
-
-		// 从session里取员工工号信息
-		String empId = (String) session.getAttribute("empId");
-
-		/*
-		 * 创建类Constants.java，里面写的是无需过滤的页面 for (int i = 0; i <
-		 * Constants.NoFilter_Pages.length; i++) {
-		 * 
-		 * if (path.indexOf(Constants.NoFilter_Pages[i]) > -1) {
-		 * chain.doFilter(servletRequest, servletResponse); return; } }
-		 */
-
-		// 登陆页面无需过滤
-		if (path.indexOf("/login.jsp") > -1) {
-			chain.doFilter(servletRequest, servletResponse);
-			return;
-		}
-
-		// 判断如果没有取到员工信息,就跳转到登陆页面
-		if (empId == null || "".equals(empId)) {
-			// 跳转到登陆页面
-			servletResponse.sendRedirect("/JingXing_OA/login.jsp");
-		} else {
-			// 已经登陆,继续此次请求
-			chain.doFilter(request, response);
-		}
+		HttpServletRequest req = (HttpServletRequest)request;  
+        HttpServletResponse res = (HttpServletResponse)response;  
+        //基于http协议的servlet  
+          
+        //如果没有登录.  
+        String requestURI = req.getRequestURI().substring(req.getRequestURI().indexOf("/",1),req.getRequestURI().length());  
+      
+        //如果第一次请求不为登录页面,则进行检查用session内容,如果为登录页面就不去检查.  
+        if(!("/login.jsp".equals(requestURI)||"/login.do".equals(requestURI)))  
+        {  
+            //取得session. 如果没有session则自动会创建一个, 我们用false表示没有取得到session则设置为session为空.  
+            HttpSession session = req.getSession(false);  
+            //如果session中没有任何东西.  
+            if(session == null ||session.getAttribute("user_info")==null)  
+            {  
+                res.sendRedirect(req.getContextPath() + "/login.jsp");  
+                //返回  
+                return;  
+            }  
+              
+        }  
+        //session中的内容等于登录页面, 则可以继续访问其他区资源.  
+        chain.doFilter(req, res);  
 		
 	}
 

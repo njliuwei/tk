@@ -18,6 +18,7 @@ import org.springframework.stereotype.Repository;
 import com.fhsoft.base.bean.Page;
 import com.fhsoft.base.dao.BaseDao;
 import com.fhsoft.model.SubjectProperty;
+import com.fhsoft.model.Users;
 import com.fhsoft.model.Word;
 
 /**
@@ -61,13 +62,14 @@ public class EnglishWordDao extends BaseDao {
 	 * 
 	 * @Description 
 	 * @param word
+	 * @param u 
 	 * @Date 2015-11-5 下午3:22:07
 	 */
-	public int addWord(final Word word) {
+	public int addWord(final Word word, final Users u) {
 		final String sql = "INSERT INTO english_word(NAME,TYPE,CREATED,LASTMODIFIED,COMPARISON,SUPERLATIVE,SUBJECT,OBJECT,"
-			+ "APP,NPP,REFLEXIVE,CARDINALNUM,ORDINALNUM,SYNONYM,STANDARD1,STANDARD2,PROVENANCE"
+			+ "APP,NPP,REFLEXIVE,CARDINALNUM,ORDINALNUM,SYNONYM,STANDARD1,STANDARD2,PROVENANCE,CREATOR,CREATOR_ID,LASTMODIFIER,LASTMODIFIER_ID"
 			+ ")VALUES(?,?,(select CONVERT(varchar, getdate(), 120 ) ),(select CONVERT(varchar, getdate(), 120 ) ),"
-			+ "?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			+ "?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		KeyHolder keyHolder = new GeneratedKeyHolder();
 		jdbcTemplate.update(new PreparedStatementCreator() {
 			public PreparedStatement createPreparedStatement(Connection con)throws SQLException {
@@ -87,6 +89,10 @@ public class EnglishWordDao extends BaseDao {
 				ps.setObject(13, word.getStandard1());
 				ps.setObject(14, word.getStandard2());
 				ps.setObject(15, word.getProvenance());
+				ps.setObject(16, u.getName());
+				ps.setObject(17, u.getId());
+				ps.setObject(18, u.getName());
+				ps.setObject(19, u.getId());
 				return ps;
 			}
 		}, keyHolder);
@@ -120,10 +126,11 @@ public class EnglishWordDao extends BaseDao {
 	public void updateWord(Word word) {
 		String sql = "UPDATE english_word SET TYPE=?,COMPARISON=?,SUPERLATIVE=?,SUBJECT=?,OBJECT=?,APP=?,NPP=?,"
 			+"REFLEXIVE=?,CARDINALNUM=?,ORDINALNUM=?,SYNONYM=?,STANDARD1=?,STANDARD2=?,PROVENANCE=?,ED=?,PRETERITE=?,PLURAL=?,LASTMODIFIED= "
-			+"(select CONVERT(varchar, getdate(), 120 )) WHERE ID=?";
+			+"(select CONVERT(varchar, getdate(), 120 )),LASTMODIFIER_ID=?,LASTMODIFIER=? WHERE ID=?";
 		jdbcTemplate.update(sql,new Object[]{word.getType(),word.getComparison(),word.getSuperlative(),word.getSubject(),word.getObject(),
 				word.getApp(),word.getNpp(),word.getReflexive(),word.getCardinalNum(),word.getOrdinalNum(),word.getSynonym(),word.getStandard1(),
-				word.getStandard2(),word.getProvenance(),word.getEd(),word.getPreterite(),word.getPlural(),word.getId()});
+				word.getStandard2(),word.getProvenance(),word.getEd(),word.getPreterite(),word.getPlural(),
+				word.getLastModifierId(),word.getLastModifier(),word.getId()});
 	}
 
 	/**

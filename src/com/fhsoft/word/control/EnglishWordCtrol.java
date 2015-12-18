@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import com.alibaba.fastjson.JSON;
 import com.fhsoft.base.bean.JsonResult;
 import com.fhsoft.base.bean.Page;
 import com.fhsoft.model.SubjectProperty;
+import com.fhsoft.model.Users;
 import com.fhsoft.model.Word;
 import com.fhsoft.util.ExcelContentParser;
 import com.fhsoft.word.service.EnglishWordService;
@@ -62,9 +64,12 @@ public class EnglishWordCtrol {
 	 
 	 @RequestMapping("updateEnglishWord")
 	 @ResponseBody
-	 public Object updateWord(HttpServletRequest request, HttpServletResponse response,Word word){
+	 public Object updateWord(HttpServletRequest request, HttpServletResponse response,HttpSession session,Word word){
 		JsonResult result = new JsonResult();
 		try {
+			Users u = (Users) session.getAttribute("user_info");
+			word.setLastModifierId(u.getId()+"");
+			word.setLastModifier(u.getName());
 			wordService.updateWord(word);
 			result.setSuccess(true);
 			result.setMsg("修改成功！");
@@ -113,15 +118,16 @@ public class EnglishWordCtrol {
 	 
 	 @RequestMapping("uploadEnglishWord")
 	 @ResponseBody
-	 public Object uploadEnglishWord(MultipartFile file,HttpServletRequest request, HttpServletResponse response){
+	 public Object uploadEnglishWord(MultipartFile file,HttpServletRequest request, HttpServletResponse response,HttpSession session){
 		JsonResult result = new JsonResult();
 		try {
 			ExcelContentParser<Word> parser = new ExcelContentParser<Word>();
+			Users u = (Users) session.getAttribute("user_info");
 			List<Word> list = new ArrayList<Word>();
 			String[] propertyNames = {"name","soundmark","type","property","meaning","comparison","superlative","subject","object",
 					"app","npp","reflexive","cardinalNum","ordinalNum","synonym","standard1","standard2","provenance"};
 			parser.parseExcel(list, Word.class, file.getInputStream(), propertyNames, file.getOriginalFilename(), 1);
-			String msg = wordService.save(list);
+			String msg = wordService.save(list,u);
 			if("success".equals(msg)) {
 				result.setSuccess(true);
 				result.setMsg("上传成功");

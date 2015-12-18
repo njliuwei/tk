@@ -24,9 +24,11 @@ import com.fhsoft.base.bean.TreeNodeBean;
 import com.fhsoft.model.Paper;
 import com.fhsoft.model.PaperModel;
 import com.fhsoft.model.SubjectProperty;
+import com.fhsoft.model.Users;
 import com.fhsoft.product.service.PaperService;
 import com.fhsoft.subject.service.SubjectPropertyValueService;
 import com.fhsoft.util.DownloadUtil;
+import com.fhsoft.util.ModelPropertySetUtil;
 
 /**
  * @ClassName:com.fhsoft.product.control.PaperController
@@ -223,12 +225,73 @@ public class PaperController {
 			paper.setSubject(subject);
 			paper.setProduct(productId);
 			paper.setPaperContent(paperInfo);
+			
+			Users user = (Users) session.getAttribute("user_info");
+			ModelPropertySetUtil.addInfo(paper, user);
+			
 			paperService.savePaper(paper);
 			result.setSuccess(true);
 			result.setMsg("保存成功！");
 		} catch (Exception e) {
 			result.setMsg("保存失败！");
 			logger.error("试卷保存失败！", e);
+		}
+		return JSON.toJSONString(result);
+	}
+	
+	/**
+	 * @Description:进入试卷更新页面
+	 * @param request
+	 * @param response
+	 * @param session
+	 * @return
+	 * @throws Exception
+	 * @Date:2015年12月11日下午2:21:51
+	 *
+	 */
+	@RequestMapping("paperUpdate")
+	public ModelAndView paperUpdate(HttpServletRequest request,
+			HttpServletResponse response,HttpSession session) throws Exception{
+		Map<String,Object> map = new HashMap<String, Object>();
+		try {
+			String id = request.getParameter("id");
+			Paper paper = paperService.getById(id);
+			PaperModel paperModel = paperService.getPaperFullContent(paper.getPaperContent());
+			map.put("paperId", id);
+			map.put("paperName", paper.getName());
+			map.put("paperModel", paperModel);
+			map.put("paperContent", paper.getPaperContent());
+		} catch (Exception e) {
+			logger.error("进入试卷更新页面出错！", e);
+		}
+		return new ModelAndView("product/paper_update",map);
+	}
+	
+	/**
+	 * @Description:更新试卷
+	 * @param request
+	 * @param response
+	 * @param session
+	 * @param paper
+	 * @return
+	 * @throws Exception
+	 * @Date:2015年12月11日下午4:42:23
+	 *
+	 */
+	@RequestMapping("paperUpdateSave")
+	@ResponseBody
+	public Object paperUpdateSave(HttpServletRequest request,
+			HttpServletResponse response,HttpSession session,Paper paper) throws Exception{
+		JsonResult result = new JsonResult();
+		try {
+			Users user = (Users) session.getAttribute("user_info");
+			ModelPropertySetUtil.updateInfo(paper, user);
+			paperService.update(paper);
+			result.setSuccess(true);
+			result.setMsg("修改成功！");
+		} catch (Exception e) {
+			result.setMsg("修改失败！");
+			logger.error("试卷修改失败！", e);
 		}
 		return JSON.toJSONString(result);
 	}
